@@ -1,0 +1,22 @@
+{
+  "data_dir": "data/toy_train_data",
+  "image_size": 256,
+  "batch_size": 8,
+  "epochs": 5,
+  "lr": 0.0002,
+  "weight_decay": 0.0001,
+  "grad_clip_norm": 0.1,
+  "num_workers": 4,
+  "seed": 1143,
+  "device": "cpu",
+  "save_dir": "runs/toy_better",
+  "save_every_epochs": 1,
+  "augment_flip": true,
+  "random_crop": true,
+  "crop_scale_max": 1.35,
+  "tv_weight": 200.0,
+  "spa_weight": 1.0,
+  "color_weight": 5.0,
+  "exp_weight": 8.0,
+  "num_images": 256
+}
