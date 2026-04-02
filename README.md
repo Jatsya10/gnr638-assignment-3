@@ -1,18 +1,28 @@
-# Zero-DCE from scratch
+# Zero-DCE from Scratch (Assignment Reimplementation)
 
-This project is a clean PyTorch reimplementation of **Zero-DCE** for low-light image enhancement.
+This repository contains a **from-scratch PyTorch reimplementation** of **Zero-DCE: Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement**.
 
-The paper frames enhancement as **iterative curve estimation** with a lightweight DCE-Net, and trains without paired ground truth using four non-reference losses: spatial consistency, exposure control, color constancy, and illumination smoothness. The official repo uses a 7-layer convolutional network with symmetric concatenation and 24 output channels for 8 curve iterations. citeturn301122view3turn770689view0turn770689view1turn770689view2turn770689view3turn808003view2
+The paper reformulates low-light enhancement as **iterative curve estimation** with a lightweight **DCE-Net**, and trains the model **without paired or unpaired reference images** using four non-reference losses: **spatial consistency**, **exposure control**, **color constancy**, and **illumination smoothness**. The paper reports strong quantitative performance and evaluates full-reference quality with **PSNR**, **SSIM**, and **MAE** on the paired SICE Part2 subset. In Table 2, Zero-DCE reports **16.57 PSNR**, **0.59 SSIM**, and **98.78 MAE**. citeturn737106view0turn941744view1turn941744view2
 
-## What is included
+## What this repo includes
 
 - `zerodce/model.py` — DCE-Net and iterative curve application
-- `zerodce/losses.py` — the four Zero-DCE losses
-- `zerodce/dataset.py` — folder-based image loader
+- `zerodce/losses.py` — Zero-DCE loss functions
+- `zerodce/dataset.py` — recursive image loader with augmentation
 - `zerodce/train.py` — training from scratch
 - `zerodce/enhance.py` — inference on a folder of images
-- `zerodce/compare_outputs.py` — compare your outputs against the official repo outputs
-- `tools/make_toy_subset.py` — make a tiny dataset for quick checks
+- `zerodce/compare_outputs.py` — compare our outputs with official outputs and original inputs
+- `tools/make_toy_subset.py` — create a balanced toy subset for fast experiments
+- `lowlight_train.py`, `lowlight_test.py`, `Myloss.py`, `model.py`, `dataloader.py` — official-code-style files kept for reference and CPU fixes
+
+## Project goal
+
+The goal of the assignment is to:
+
+1. Reimplement the paper from scratch.
+2. Train on a **toy dataset / small sample**.
+3. Compare the reimplementation against the **official implementation**.
+4. Report both **quantitative** and **qualitative** differences.
 
 ## Folder layout
 
@@ -20,28 +30,29 @@ The paper frames enhancement as **iterative curve estimation** with a lightweigh
 zerodce_from_scratch/
 ├── README.md
 ├── requirements.txt
-├── zerodce/
-│   ├── __init__.py
-│   ├── compare_outputs.py
-│   ├── dataset.py
-│   ├── enhance.py
-│   ├── losses.py
-│   ├── model.py
-│   ├── train.py
-│   └── utils.py
-└── tools/
-    └── make_toy_subset.py
+├── data/
+├── outputs/
+├── runs/
+├── snapshots/
+├── tools/
+└── zerodce/
 ```
 
-## Dataset expectation
+## Dataset setup
 
-Put the downloaded training images inside:
+Place the downloaded training images in:
 
 ```text
 data/train_data/
 ```
 
-The loader reads all image files recursively, so you may also use subfolders.
+The loader reads images recursively, so subfolders are supported.
+
+For a quick experiment, create a balanced toy subset:
+
+```bash
+python tools/make_toy_subset.py --src data/train_data --dst data/toy_train_data --max_images 256 --bins 4
+```
 
 ## Install
 
@@ -51,85 +62,113 @@ pip install -r requirements.txt
 
 ## Sequential run order
 
-### 1) Create a tiny subset for a fast experiment
+### 1) Create a toy subset
 
 ```bash
-python tools/make_toy_subset.py --src data/train_data --dst data/toy_train_data --max_images 64
+python tools/make_toy_subset.py --src data/train_data --dst data/toy_train_data --max_images 256 --bins 4
 ```
 
-### 2) Train from scratch on the toy subset
+### 2) Train the from-scratch model
+
+Recommended 5-epoch demo run:
 
 ```bash
-python -m zerodce.train --data_dir data/toy_train_data --epochs 5 --batch_size 8 --save_dir runs/toy_run
+python -m zerodce.train \
+  --data_dir data/toy_train_data \
+  --epochs 5 \
+  --batch_size 8 \
+  --save_dir runs/toy_better
 ```
 
-This writes:
-- `runs/toy_run/checkpoints/zerodce_epoch_###.pt`
-- `runs/toy_run/train_log.csv`
-- `runs/toy_run/samples/`
+For slightly stronger enhancement in the toy setting, the default training script uses a modest exposure emphasis and stronger smoothness regularization to avoid over-brightening.
 
-### 3) Enhance a few test images with your checkpoint
+### 3) Run inference with your checkpoint
 
 ```bash
 python -m zerodce.enhance \
-  --checkpoint runs/toy_run/checkpoints/zerodce_epoch_005.pt \
+  --checkpoint runs/toy_better/checkpoints/zerodce_epoch_005.pt \
   --input_dir data/test_data \
   --output_dir outputs/ours
 ```
 
-### 4) Run the official repo on the same test folder
+### 4) Run the official implementation on the same test images
 
-Use the official repository with the same input images and save those results to another folder, for example:
+Save the official outputs to:
 
 ```text
-outputs/official
+outputs/official/
 ```
 
-### 5) Compare your outputs to the official outputs
+### 5) Compare outputs
 
 ```bash
-python -m zerodce.compare_outputs --ours outputs/ours --official outputs/official --report_dir comparison_report
+python -m zerodce.compare_outputs \
+  --ours outputs/ours \
+  --official outputs/official \
+  --original data/test_data \
+  --report_dir comparison_report \
+  --save_panels
 ```
 
 This produces:
 
 - `comparison_report/per_image.csv`
 - `comparison_report/summary.json`
+- `comparison_report/report.html`
+- `comparison_report/visuals/`
 
-The comparison is between the two sets of enhanced images, so it measures how close your implementation is to the official implementation on the same inputs.
+## What the comparison means
 
-## Notes for reproduction
+The comparison script reports three kinds of values:
 
-The official paper and repo use the same core design:
-- 7 conv layers with 32 feature maps
-- no pooling and no batch normalization
-- `tanh` output for the curve maps
-- 8 iterations, so `24` final curve channels
-- total loss:
-  - `200 * L_TV`
-  - `+ L_spa`
-  - `+ 5 * L_col`
-  - `+ 10 * L_exp` citeturn301122view3turn770689view0turn770689view1turn770689view2turn770689view3turn808003view2
+- **ours vs official** — how closely our implementation matches the official repo
+- **ours vs original** — how much our model changes the input image
+- **official vs original** — how much the official model changes the input image
 
-That is exactly the training recipe this reimplementation follows.
+For a fair reproduction study, the most useful report is the **qualitative panel** showing:
 
-## Suggested assignment write-up structure
+- **ORIGINAL**
+- **OFFICIAL**
+- **OURS**
 
-1. State the paper and why it is zero-reference.
-2. Describe the architecture and losses.
-3. Mention that you reimplemented the method from scratch.
-4. Train on a small subset first.
-5. Show enhanced samples from your code and the official repo.
-6. Report the comparison CSV and summary JSON.
-7. Explain differences if your outputs are not identical.
+and the CSV/JSON summary for the corresponding metrics.
+
+## Expected result pattern
+
+With only a 5-epoch toy run, the output is expected to differ from the official model and may be brighter or less stable than the official result. That is normal for a quick reproduction experiment. The main objective is to show that the model is functioning, the losses decrease overall, and the enhancement trend matches the paper.
+
+## Notes for writing the report
+
+The paper’s main claims are:
+
+- Zero-DCE is **zero-reference**: it does not require paired or unpaired images for training.
+- DCE-Net is lightweight and uses **iterative curve estimation**.
+- The model is trained with four non-reference losses.
+- The paper reports **PSNR 16.57**, **SSIM 0.59**, **MAE 98.78** on the SICE Part2 paired subset. citeturn737106view0turn941744view1turn941744view2
+
+## Troubleshooting
+
+### CPU-only machine
+
+If a file uses `.cuda()`, replace it with `.to(device)` and load checkpoints with `map_location=device`.
+
+### Pillow error: `Image.ANTIALIAS`
+
+Use:
+
+```python
+Image.Resampling.LANCZOS
+```
+
+instead of `Image.ANTIALIAS`.
+
+### Tab / space indentation error
+
+Convert the entire file to spaces only.
 
 ## Citation
 
-```bibtex
-@inproceedings{Zero-DCE,
-  author = {Guo, Chunle and Li, Chongyi and Guo, Jichang and Loy, Chen Change and Hou, Junhui and Kwong, Sam and Cong, Runmin},
-  title = {Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement},
-  booktitle = {CVPR},
-  year = {2020}
-}
-```
+Paper:
+
+> Chunle Guo et al., *Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement*, CVPR 2020.
+
