@@ -2,7 +2,10 @@
 
 This repository contains a **from-scratch PyTorch reimplementation** of **Zero-DCE: Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement**.
 
-The paper reformulates low-light enhancement as **iterative curve estimation** with a lightweight **DCE-Net**, and trains the model **without paired or unpaired reference images** using four non-reference losses: **spatial consistency**, **exposure control**, **color constancy**, and **illumination smoothness**. The paper reports strong quantitative performance and evaluates full-reference quality with **PSNR**, **SSIM**, and **MAE** on the paired SICE Part2 subset. In Table 2, Zero-DCE reports **16.57 PSNR**, **0.59 SSIM**, and **98.78 MAE**. citeturn737106view0turn941744view1turn941744view2
+The paper reformulates low-light enhancement as **iterative curve estimation** with a lightweight **DCE-Net**, and trains the model **without paired or unpaired reference images** using four non-reference losses: **spatial consistency**, **exposure control**, **color constancy**, and **illumination smoothness**. The paper reports strong quantitative performance and evaluates full-reference quality with **PSNR**, **SSIM**, and **MAE** on the paired SICE Part2 subset. In Table 2, Zero-DCE reports **16.57 PSNR**, **0.59 SSIM**, and **98.78 MAE**. 
+Paper link: https://arxiv.org/pdf/2001.06826
+Official Github Repo link: https://github.com/Li-Chongyi/Zero-DCE
+Blog link: https://medium.com/@jatsyajariwala29/zero-dce-a-simple-yet-powerful-approach-for-low-light-image-enhancement-f887c7e7348d 
 
 ## What this repo includes
 
@@ -13,7 +16,7 @@ The paper reformulates low-light enhancement as **iterative curve estimation** w
 - `zerodce/enhance.py` — inference on a folder of images
 - `zerodce/compare_outputs.py` — compare our outputs with official outputs and original inputs
 - `tools/make_toy_subset.py` — create a balanced toy subset for fast experiments
-- `lowlight_train.py`, `lowlight_test.py`, `Myloss.py`, `model.py`, `dataloader.py` — official-code-style files kept for reference and CPU fixes
+- `lowlight_train.py`, `lowlight_test.py`, `Myloss.py`, `model.py`, `dataloader.py` — official code files kept for reference and getting output of official model for test data to compare with our model
 
 ## Project goal
 
@@ -73,10 +76,14 @@ python tools/make_toy_subset.py --src data/train_data --dst data/toy_train_data 
 Recommended 5-epoch demo run:
 
 ```bash
-python -m zerodce.train \
+python -m zerodce.train \  
   --data_dir data/toy_train_data \
-  --epochs 5 \
-  --batch_size 8 \
+  --epochs 5 \  
+  --batch_size 8 \  
+  --tv_weight 200 \  
+  --exp_weight 8 \  
+  --color_weight 5 \  
+  --spa_weight 1 \  
   --save_dir runs/toy_better
 ```
 
@@ -136,35 +143,6 @@ and the CSV/JSON summary for the corresponding metrics.
 ## Expected result pattern
 
 With only a 5-epoch toy run, the output is expected to differ from the official model and may be brighter or less stable than the official result. That is normal for a quick reproduction experiment. The main objective is to show that the model is functioning, the losses decrease overall, and the enhancement trend matches the paper.
-
-## Notes for writing the report
-
-The paper’s main claims are:
-
-- Zero-DCE is **zero-reference**: it does not require paired or unpaired images for training.
-- DCE-Net is lightweight and uses **iterative curve estimation**.
-- The model is trained with four non-reference losses.
-- The paper reports **PSNR 16.57**, **SSIM 0.59**, **MAE 98.78** on the SICE Part2 paired subset. citeturn737106view0turn941744view1turn941744view2
-
-## Troubleshooting
-
-### CPU-only machine
-
-If a file uses `.cuda()`, replace it with `.to(device)` and load checkpoints with `map_location=device`.
-
-### Pillow error: `Image.ANTIALIAS`
-
-Use:
-
-```python
-Image.Resampling.LANCZOS
-```
-
-instead of `Image.ANTIALIAS`.
-
-### Tab / space indentation error
-
-Convert the entire file to spaces only.
 
 ## Citation
 
