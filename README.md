@@ -30,15 +30,33 @@ The goal of the assignment is to:
 ## Folder layout
 
 ```text
-zerodce_from_scratch/
+.
 ├── README.md
 ├── requirements.txt
 ├── data/
+│   ├── train_data/
+│   ├── toy_train_data/
+│   └── test_data/
 ├── outputs/
+│   ├── ours/
+│   └── official/
 ├── runs/
-├── snapshots/
+├── snapshots/                # official model checkpoints
+├── comparison_report/
 ├── tools/
-└── zerodce/
+│   └── make_toy_subset.py
+├── zerodce/
+│   ├── model.py
+│   ├── losses.py
+│   ├── dataset.py
+│   ├── train.py
+│   ├── enhance.py
+│   └── compare_outputs.py
+├── lowlight_train.py        # official training script
+├── lowlight_test.py         # official inference script
+├── Myloss.py
+├── model.py
+└── dataloader.py
 ```
 
 ## Dataset setup
