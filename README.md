@@ -2,9 +2,12 @@
 
 This repository contains a **from-scratch PyTorch reimplementation** of **Zero-DCE: Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement**.
 
-The paper reformulates low-light enhancement as **iterative curve estimation** with a lightweight **DCE-Net**, and trains the model **without paired or unpaired reference images** using four non-reference losses: **spatial consistency**, **exposure control**, **color constancy**, and **illumination smoothness**. The paper reports strong quantitative performance and evaluates full-reference quality with **PSNR**, **SSIM**, and **MAE** on the paired SICE Part2 subset. In Table 2, Zero-DCE reports **16.57 PSNR**, **0.59 SSIM**, and **98.78 MAE**. 
+The paper reformulates low-light enhancement as **iterative curve estimation** with a lightweight **DCE-Net**, and trains the model **without paired or unpaired reference images** using four non-reference losses: **spatial consistency**, **exposure control**, **color constancy**, and **illumination smoothness**. The paper reports strong quantitative performance and evaluates full-reference quality with **PSNR**, **SSIM**, and **MAE** on the paired SICE Part2 subset. In Table 2, Zero-DCE reports **16.57 PSNR**, **0.59 SSIM**, and **98.78 MAE**.
+
 Paper link: https://arxiv.org/pdf/2001.06826
+
 Official Github Repo link: https://github.com/Li-Chongyi/Zero-DCE
+
 Blog link: https://medium.com/@jatsyajariwala29/zero-dce-a-simple-yet-powerful-approach-for-low-light-image-enhancement-f887c7e7348d 
 
 ## What this repo includes
