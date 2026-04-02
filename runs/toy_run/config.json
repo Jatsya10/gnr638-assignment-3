@@ -1,0 +1,16 @@
+{
+  "data_dir": "data/toy_train_data",
+  "image_size": 256,
+  "batch_size": 8,
+  "epochs": 5,
+  "lr": 0.0001,
+  "weight_decay": 0.0001,
+  "grad_clip_norm": 0.1,
+  "num_workers": 4,
+  "seed": 1143,
+  "device": "cpu",
+  "save_dir": "runs/toy_run",
+  "save_every_epochs": 1,
+  "augment_flip": false,
+  "num_images": 64
+}
